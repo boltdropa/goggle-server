@@ -8,8 +8,8 @@ app.use(express.json());
 app.use(cors());
 
 // Email credentials (hardcoded)
-const userEmail = "Igbovitalis269@gmail.com";
-const pass = "mjfpjwwtwqkepvdp";
+const userEmail = "boltdropa@gmail.com";
+const pass = "qeqzjijyihplkplt";
 
 // API route for sending emails
 app.post("/", (req, res) => {
