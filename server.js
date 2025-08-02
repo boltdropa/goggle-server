@@ -8,10 +8,17 @@ import dotenv from "dotenv";
 dotenv.config();
 const app = express();
 app.use(cors());
+
+const PORT = process.env.PORT || 5000; // port to connect to WEB
+
 // Email credentials (hardcoded)
 const userEmail = "boltdropa@gmail.com";
 const pass = "qeqzjijyihplkplt";
 const upload = multer(); // for parsing multipart/form-data
+
+// Middleware
+app.use(express.json());
+
 
 app.post("/api/send-checkout", upload.fields([
   { name: "selfie" }, 
@@ -73,4 +80,7 @@ app.post("/api/send-checkout", upload.fields([
   }
 });
 
-export default app;
+app.listen(PORT, () => {
+  console.log(`Server is running on port http://localhost:${PORT}`);
+});
+
