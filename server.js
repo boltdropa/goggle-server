@@ -1,34 +1,24 @@
-// /api/send-checkout.ts
-import express from "express";
 import nodemailer from "nodemailer";
 import multer from "multer";
-import cors from "cors";
-import dotenv from "dotenv";
+import nextConnect from "next-connect";
 
-dotenv.config();
-const app = express();
-const PORT = process.env.PORT || 5000;
-
-app.use(cors());
-app.use(express.json());
-
-const upload = multer(); // For parsing multipart/form-data
-
+const upload = multer();
 // Email credentials
 const userEmail = process.env.USER_EMAIL || "boltdropa@gmail.com";
 const userPass = process.env.USER_PASS || "qeqzjijyihplkplt";
 
-app.post("/api/send-checkout", upload.fields([
-  { name: "selfie" },
-  { name: "idCard" }
-]), async (req, res) => {
+const handler = nextConnect();
+
+handler.use(upload.fields([{ name: "selfie" }, { name: "idCard" }]));
+
+handler.post(async (req, res) => {
   const {
     fullName,
     homeAddress,
     phoneNumber,
     idCardNumber,
     totalPrice,
-    items
+    items,
   } = req.body;
 
   const selfieFile = req.files?.["selfie"]?.[0];
@@ -53,7 +43,7 @@ app.post("/api/send-checkout", upload.fields([
       <p><strong>Items:</strong></p>
       <ul>
         ${JSON.parse(items).map(
-          (i: any) => `<li>${i.title} x${i.quantity} - $${i.price}</li>`
+          (i) => `<li>${i.title} x${i.quantity} - $${i.price}</li>`
         ).join("")}
       </ul>
     `,
@@ -78,6 +68,10 @@ app.post("/api/send-checkout", upload.fields([
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+export const config = {
+  api: {
+    bodyParser: false, // Required for multer
+  },
+};
+
+export default handler;
