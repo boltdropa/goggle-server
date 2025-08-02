@@ -7,21 +7,19 @@ import dotenv from "dotenv";
 
 dotenv.config();
 const app = express();
+const PORT = process.env.PORT || 5000;
+
 app.use(cors());
-
-const PORT = process.env.PORT || 5000; // port to connect to WEB
-
-// Email credentials (hardcoded)
-const userEmail = "boltdropa@gmail.com";
-const pass = "qeqzjijyihplkplt";
-const upload = multer(); // for parsing multipart/form-data
-
-// Middleware
 app.use(express.json());
 
+const upload = multer(); // For parsing multipart/form-data
+
+// Email credentials
+const userEmail = process.env.USER_EMAIL || "boltdropa@gmail.com";
+const userPass = process.env.USER_PASS || "qeqzjijyihplkplt";
 
 app.post("/api/send-checkout", upload.fields([
-  { name: "selfie" }, 
+  { name: "selfie" },
   { name: "idCard" }
 ]), async (req, res) => {
   const {
@@ -38,15 +36,12 @@ app.post("/api/send-checkout", upload.fields([
 
   const transporter = nodemailer.createTransport({
     service: "gmail",
-    auth: {
-      user: userEmail,
-      pass: pass,
-    },
+    auth: { user: userEmail, pass: userPass },
   });
 
   const mailOptions = {
-    from: process.env.USER_EMAIL,
-    to: process.env.USER_EMAIL,
+    from: userEmail,
+    to: userEmail,
     subject: `New Order from ${fullName}`,
     html: `
       <h2>New SpectrumStyle Order</h2>
@@ -55,9 +50,12 @@ app.post("/api/send-checkout", upload.fields([
       <p><strong>Phone:</strong> ${phoneNumber}</p>
       <p><strong>ID Number:</strong> ${idCardNumber}</p>
       <p><strong>Total:</strong> $${totalPrice}</p>
-      <p><strong>Items:</strong> ${JSON.parse(items).map(
-        (i: any) => `<li>${i.title} x${i.quantity} - $${i.price}</li>`
-      ).join("")}</p>
+      <p><strong>Items:</strong></p>
+      <ul>
+        ${JSON.parse(items).map(
+          (i: any) => `<li>${i.title} x${i.quantity} - $${i.price}</li>`
+        ).join("")}
+      </ul>
     `,
     attachments: [
       selfieFile && {
@@ -81,6 +79,5 @@ app.post("/api/send-checkout", upload.fields([
 });
 
 app.listen(PORT, () => {
-  console.log(`Server is running on port http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
-
